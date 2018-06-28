@@ -1,0 +1,41 @@
+#
+#    Build test program using multitasing classes.
+#
+
+DEBUG = 1       # Turn on debugging info
+
+!IF DEFINED(DEBUG)
+CFLAGS = /AS /c /f /Zi /D_DEBUG
+ASMFLAGS = /ZI /D_DEBUG
+!ELSE
+CFLAGS = /AS /c
+ASMFLAGS = 
+!ENDIF
+
+!IF DEFINED(DEBUG)
+LFLAGS = /CO /STACK:0x1000
+!ELSE
+LFLAGS = /STACK:0x0900
+!ENDIF
+
+STDHDRS = threads.h specific.h
+OBJECTS = threads.obj specific.obj example.obj
+
+# Implicit rules
+.cpp.obj:
+    cl $(CFLAGS) $*.cpp
+
+.asm.obj:
+    masm $(ASMFLAGS) $*.asm
+
+# Dependencies and actions
+example.exe:   example.obj threads.lib
+    link $(LFLAGS) $(OBJECTS), example.exe, example.map, threads.lib; 
+        
+threads.lib: threads.obj specific.obj
+    lib threads.lib +threads.obj,,
+    lib threads.lib +specific.obj,,
+
+threads.obj:   threads.cpp $(STDHDRS)
+
+example.obj:   example.cpp $(STDHDRS)
